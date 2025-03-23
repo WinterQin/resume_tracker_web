@@ -7,6 +7,8 @@
 *.so
 *.dylib
 main
+*.zip
+*.7z
 
 # 测试二进制文件
 *.test
