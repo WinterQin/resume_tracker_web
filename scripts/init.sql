@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS internship_manager;
+DROP DATABASE IF EXISTS test;
 
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS internship_manager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE internship_manager;
 

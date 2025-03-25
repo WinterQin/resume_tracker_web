@@ -1,12 +1,11 @@
 package handler
 
 import (
-	"net/http"
-	"strconv"
-	"time"
-
 	"internship-manager/internal/model"
 	"internship-manager/internal/service"
+	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,15 +25,12 @@ func (h *ApplicationHandler) CreateApplication(c *gin.Context) {
 	userID := c.GetUint("userID")
 	var req struct {
 		// 必填字段
-		Company   string `json:"company" binding:"required"`
-		Position  string `json:"position" binding:"required"`
-		EventLink string `json:"event_link" binding:"required"`
+		Company  string `json:"company" binding:"required"`
+		Position string `json:"position" binding:"required"`
 
 		// 可选字段
-		Location    string `json:"location"`
-		Salary      string `json:"salary"`
-		ContactInfo string `json:"contact_info"`
-		Notes       string `json:"notes"`
+		EventLink string `json:"event_link"`
+		Notes     string `json:"notes"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,32 +38,18 @@ func (h *ApplicationHandler) CreateApplication(c *gin.Context) {
 		return
 	}
 
-	// 处理可选字段的默认值
-	if req.Location == "" {
-		req.Location = "无"
-	}
-	if req.Salary == "" {
-		req.Salary = "无"
-	}
-	if req.ContactInfo == "" {
-		req.ContactInfo = "无"
-	}
 	if req.Notes == "" {
 		req.Notes = "无"
 	}
 
 	// 创建申请记录
 	application := model.Application{
-		UserID:      userID,
-		Company:     req.Company,
-		Position:    req.Position,
-		Status:      model.StatusSubmitted,
-		EventLink:   req.EventLink,
-		Location:    req.Location,
-		Salary:      req.Salary,
-		ContactInfo: req.ContactInfo,
-		Notes:       req.Notes,
-		ApplyDate:   time.Now(),
+		UserID:    userID,
+		Company:   req.Company,
+		Position:  req.Position,
+		Status:    model.StatusSubmitted,
+		EventLink: req.EventLink,
+		Notes:     req.Notes,
 	}
 
 	err := h.applicationService.CreateApplicationFull(&application)
@@ -100,57 +82,20 @@ func (h *ApplicationHandler) UpdateStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "更新成功"})
 }
 
-// UpdateEvent 更新面试/笔试事件
-func (h *ApplicationHandler) UpdateEvent(c *gin.Context) {
-	var req struct {
-		ID        uint      `json:"id" binding:"required"`
-		EventTime time.Time `json:"event_time" binding:"required"`
-		EventType string    `json:"event_type" binding:"required"`
-		EventLink string    `json:"event_link"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
-		return
-	}
-
-	err := h.applicationService.UpdateNextEvent(req.ID, req.EventTime, req.EventType, req.EventLink)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "更新成功"})
-}
-
 // UpdateApplication 更新申请信息
 func (h *ApplicationHandler) UpdateApplication(c *gin.Context) {
 	userID := c.GetUint("userID")
 	var req struct {
-		ID          uint   `json:"id" binding:"required"`
-		Company     string `json:"company" binding:"required"`
-		Position    string `json:"position" binding:"required"`
-		EventLink   string `json:"event_link" binding:"required"`
-		Location    string `json:"location"`
-		Salary      string `json:"salary"`
-		ContactInfo string `json:"contact_info"`
-		Notes       string `json:"notes"`
+		ID        uint   `json:"id" binding:"required"`
+		Company   string `json:"company" binding:"required"`
+		Position  string `json:"position" binding:"required"`
+		EventLink string `json:"event_link" binding:"required"`
+		Notes     string `json:"notes"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
 		return
-	}
-
-	// 处理可选字段的默认值
-	if req.Location == "" {
-		req.Location = "无"
-	}
-	if req.Salary == "" {
-		req.Salary = "无"
-	}
-	if req.ContactInfo == "" {
-		req.ContactInfo = "无"
 	}
 	if req.Notes == "" {
 		req.Notes = "无"
@@ -158,13 +103,10 @@ func (h *ApplicationHandler) UpdateApplication(c *gin.Context) {
 
 	// 更新申请记录
 	updates := map[string]interface{}{
-		"company":      req.Company,
-		"position":     req.Position,
-		"event_link":   req.EventLink,
-		"location":     req.Location,
-		"salary":       req.Salary,
-		"contact_info": req.ContactInfo,
-		"notes":        req.Notes,
+		"company":    req.Company,
+		"position":   req.Position,
+		"event_link": req.EventLink,
+		"notes":      req.Notes,
 	}
 
 	err := h.applicationService.UpdateApplication(req.ID, userID, updates)
@@ -176,7 +118,36 @@ func (h *ApplicationHandler) UpdateApplication(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "更新成功"})
 }
 
-// GetApplications 获取用户的所有申请
+//// GetApplications 获取用户的申请（分页）
+//func (h *ApplicationHandler) GetApplications(c *gin.Context) {
+//	userID := c.GetUint("userID")
+//
+//	// 获取分页参数
+//	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+//	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+//
+//	// 参数验证
+//	if page < 1 {
+//		page = 1
+//	}
+//	if pageSize < 1 {
+//		pageSize = 10
+//	}
+//
+//	applications, total, err := h.applicationService.GetApplicationsWithPagination(userID, page, pageSize)
+//	if err != nil {
+//		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+//		return
+//	}
+//
+//	c.JSON(http.StatusOK, gin.H{
+//		"applications": applications,
+//		"total":        total,
+//		"current_page": page,
+//		"page_size":    pageSize,
+//	})
+//}
+
 // GetApplications 获取用户的申请（分页）
 func (h *ApplicationHandler) GetApplications(c *gin.Context) {
 	userID := c.GetUint("userID")
@@ -184,6 +155,14 @@ func (h *ApplicationHandler) GetApplications(c *gin.Context) {
 	// 获取分页参数
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	searchQuery := c.DefaultQuery("search", "")
+
+	// 获取状态筛选参数
+	statusesStr := c.DefaultQuery("statuses", "")
+	var statuses []string
+	if statusesStr != "" {
+		statuses = strings.Split(statusesStr, ",")
+	}
 
 	// 参数验证
 	if page < 1 {
@@ -193,7 +172,7 @@ func (h *ApplicationHandler) GetApplications(c *gin.Context) {
 		pageSize = 10
 	}
 
-	applications, total, err := h.applicationService.GetApplicationsWithPagination(userID, page, pageSize)
+	applications, total, err := h.applicationService.GetApplicationsWithPagination(userID, page, pageSize, searchQuery, statuses)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -229,20 +208,7 @@ func (h *ApplicationHandler) GetStatistics(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"statistics": stats})
-}
-
-// GetUpcomingEvents 获取即将到来的面试/笔试事件
-func (h *ApplicationHandler) GetUpcomingEvents(c *gin.Context) {
-	userID := c.GetUint("userID")
-	events, err := h.applicationService.GetUpcomingEvents(userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"events": events})
 }
 
 // DeleteApplication 删除实习申请

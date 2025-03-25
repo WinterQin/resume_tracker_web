@@ -84,3 +84,56 @@ func (s *UserService) GetUserByID(id uint) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func NewUserService() *UserService {
+	return &UserService{}
+}
+
+// UpdateUser 更新用户信息
+func (s *UserService) UpdateUser(id uint, userData map[string]interface{}) error {
+	// 不允许更新用户名和密码
+	delete(userData, "username")
+	delete(userData, "password")
+
+	result := database.DB.Model(&model.User{}).Where("id = ?", id).Updates(userData)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("用户不存在")
+	}
+	return nil
+}
+
+//// UpdatePassword 更新用户密码
+//func (s *UserService) UpdatePassword(id uint, oldPassword, newPassword string) error {
+//	var user model.User
+//	if err := database.DB.First(&user, id).Error; err != nil {
+//		return err
+//	}
+//
+//	// 验证旧密码
+//	if !user.CheckPassword(oldPassword) {
+//		return errors.New("旧密码不正确")
+//	}
+//
+//	// 设置新密码
+//	if err := user.SetPassword(newPassword); err != nil {
+//		return err
+//	}
+//
+//	// 更新密码
+//	return database.DB.Model(&user).Update("password", user.Password).Error
+//}
+
+// DeleteUser 删除用户
+func (s *UserService) DeleteUser(id uint) error {
+	result := database.DB.Delete(&model.User{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("用户不存在")
+	}
+	return nil
+}

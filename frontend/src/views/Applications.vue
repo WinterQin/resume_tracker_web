@@ -3,83 +3,76 @@
     <AppHeader />
     <div class="header">
       <h2>申请列表</h2>
-      <el-button type="primary" @click="showCreateDialog">新建申请</el-button>
+      <div class="header-right">
+        <el-input
+          v-model="searchQuery"
+          placeholder="搜索公司名称"
+          class="search-input"
+          clearable
+          @clear="handleSearch"
+          @input="handleSearch"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-button type="primary" @click="showCreateDialog">新建申请</el-button>
+      </div>
     </div>
 
-    <el-table 
-      :data="applications" 
-      v-loading="loading" 
-      style="width: 100%"
-      :empty-text="emptyText"
-    >
-      <el-table-column prop="company" label="公司" min-width="120"/>
-      <el-table-column prop="position" label="职位" min-width="120"/>
+    <el-table :data="filteredApplications" v-loading="loading" style="width: 100%" :empty-text="emptyText">
+      <el-table-column prop="company" label="公司" min-width="120" />
+      <el-table-column prop="position" label="职位" min-width="120" />
       <el-table-column prop="status" label="状态" width="100">
-        <template #default="{ row }">
-          <el-tag 
-            :type="getStatusType(row.status)"
-            :style="getStatusStyle(row.status)"
+        <template #header>
+          <el-popover
+            placement="bottom"
+            :width="200"
+            trigger="click"
           >
+            <template #reference>
+              <span>状态 <el-icon><ArrowDown /></el-icon></span>
+            </template>
+            <el-checkbox-group v-model="selectedStatuses" @change="handleStatusFilter">
+              <el-checkbox v-for="option in statusOptions" :key="option.value" :label="option.value">
+                {{ option.label }}
+              </el-checkbox>
+            </el-checkbox-group>
+          </el-popover>
+        </template>
+        <template #default="{ row }">
+          <el-tag :type="getStatusType(row.status)" :style="getStatusStyle(row.status)">
             {{ getStatusText(row.status) }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="event_link" label="面试链接" min-width="150">
         <template #default="{ row }">
-          <el-link 
-            v-if="row.event_link && row.event_link !== '无'"
-            type="primary" 
-            :href="row.event_link" 
-            target="_blank"
-            :underline="false"
-          >
-            <el-icon><Link /></el-icon>
+          <el-link v-if="row.event_link && row.event_link !== '无'" type="primary" :href="row.event_link" target="_blank"
+            :underline="false">
+            <el-icon>
+              <Link />
+            </el-icon>
             {{ row.event_link }}
           </el-link>
           <span v-else>{{ row.event_link }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="apply_date" label="申请时间" width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.apply_date) }}
-        </template>
-      </el-table-column>
+
       <el-table-column type="expand" fixed="right" width="50">
         <template #default="props">
           <el-descriptions class="expanded-info" :column="1" border>
-            <el-descriptions-item 
-              label="工作地点" 
-              v-if="props.row.Location"
-            >{{ props.row.Location }}</el-descriptions-item>
-            <el-descriptions-item 
-              label="期望薪资" 
-              v-if="props.row.Salary"
-            >{{ props.row.Salary }}</el-descriptions-item>
-            <el-descriptions-item 
-              label="联系信息" 
-              v-if="props.row.ContactInfo"
-            >{{ props.row.ContactInfo }}</el-descriptions-item>
-            <el-descriptions-item 
-              label="备注" 
-              v-if="props.row.Notes"
-            >{{ props.row.Notes }}</el-descriptions-item>
+            <el-descriptions-item label="备注">{{ props.row.Notes }}</el-descriptions-item>
           </el-descriptions>
         </template>
       </el-table-column>
+
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button-group>
             <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button 
-              size="small" 
-              type="danger" 
-              @click="handleDelete(row)"
-            >删除</el-button>
-            <el-button 
-              size="small" 
-              type="success" 
-              @click="handleUpdateStatus(row)"
-            >更新状态</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button size="small" type="success" @click="handleUpdateStatus(row)">更新状态</el-button>
           </el-button-group>
         </template>
       </el-table-column>
@@ -87,23 +80,13 @@
 
     <!-- 添加分页组件 -->
     <div class="pagination-container">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10,15, 20]"
-        :total="total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
+      <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10, 15, 20]"
+        :total="total" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange"
+        @current-change="handleCurrentChange" />
     </div>
 
     <!-- 创建/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑申请' : '新建申请'"
-      width="600px"
-    >
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑申请' : '新建申请'" width="600px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <!-- 必填字段 -->
         <el-form-item label="公司" prop="company">
@@ -112,29 +95,15 @@
         <el-form-item label="职位" prop="position">
           <el-input v-model="form.position" placeholder="请输入职位名称" />
         </el-form-item>
-        <el-form-item label="面试链接" prop="event_link">
-          <el-input v-model="form.event_link" placeholder="请输入面试链接" />
-        </el-form-item>
+
 
         <!-- 可选字段 -->
         <el-divider>可选信息</el-divider>
-        
-        <el-form-item label="工作地点">
-          <el-input v-model="form.location" placeholder="请输入工作地点" />
-        </el-form-item>
-        <el-form-item label="期望薪资">
-          <el-input v-model="form.salary" placeholder="请输入期望薪资" />
-        </el-form-item>
-        <el-form-item label="联系信息">
-          <el-input v-model="form.contact_info" placeholder="请输入联系信息" />
+        <el-form-item label="面试链接" prop="event_link">
+          <el-input v-model="form.event_link" placeholder="请输入面试链接" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input
-            v-model="form.notes"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入备注信息"
-          />
+          <el-input v-model="form.notes" type="textarea" :rows="3" placeholder="请输入备注信息" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -148,20 +117,11 @@
     </el-dialog>
 
     <!-- 更新状态对话框 -->
-    <el-dialog
-      v-model="statusDialogVisible"
-      title="更新状态"
-      width="400px"
-    >
+    <el-dialog v-model="statusDialogVisible" title="更新状态" width="400px">
       <el-form :model="statusForm" label-width="80px">
         <el-form-item label="状态">
           <el-select v-model="statusForm.status" placeholder="请选择状态">
-            <el-option
-              v-for="item in statusOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -178,9 +138,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Link } from '@element-plus/icons-vue'
+import { Link, Search, ArrowDown } from '@element-plus/icons-vue'
 import { applicationApi } from '../api/application'
 import { formatDate } from '../utils/date'
 import AppHeader from '../components/AppHeader.vue'
@@ -204,9 +164,6 @@ const form = reactive({
   company: '',
   position: '',
   event_link: '',
-  location: '',
-  salary: '',
-  contact_info: '',
   notes: ''
 })
 
@@ -217,7 +174,7 @@ const statusForm = reactive({
 const rules = {
   company: [{ required: true, message: '请输入公司名称', trigger: 'blur' }],
   position: [{ required: true, message: '请输入职位名称', trigger: 'blur' }],
-  event_link: [{ required: true, message: '请输入面试链接', trigger: 'blur' }]
+  event_link: [{ required: false, message: '请输入链接', trigger: 'blur' }]
 }
 
 const statusOptions = [
@@ -257,33 +214,40 @@ const getStatusStyle = (status) => {
   return {}
 }
 
+// 搜索和筛选相关的响应式变量
+const searchQuery = ref('')
+const selectedStatuses = ref(['submitted', 'written', 'interview', 'accepted'])
+
+// 直接使用后端数据，不再需要本地过滤
+const filteredApplications = computed(() => {
+  return applications.value
+})
+
 const fetchApplications = async () => {
   try {
     loading.value = true
     emptyText.value = '数据加载中...'
-    
+
     const response = await applicationApi.getApplications({
       page: currentPage.value,
-      pageSize: pageSize.value
+      pageSize: pageSize.value,
+      search: searchQuery.value,
+      statuses: selectedStatuses.value.join(',')
     })
-    
+
     if (!response || !response.applications) {
       emptyText.value = '暂无申请记录'
       applications.value = []
       return
     }
-    
+
     applications.value = response.applications.map(item => ({
       id: item.ID,
       company: item.company,
       position: item.position,
       status: item.status,
-      apply_date: item.apply_date,
       event_link: item.event_link,
       Notes: item.notes,
-      Salary: item.salary,
-      Location: item.location,
-      ContactInfo: item.contact_info
     }))
 
     total.value = response.total
@@ -301,9 +265,7 @@ const showCreateDialog = () => {
   form.company = ''
   form.position = ''
   form.event_link = ''
-  form.location = ''
-  form.salary = ''
-  form.contact_info = ''
+
   form.notes = ''
   dialogVisible.value = true
 }
@@ -313,11 +275,10 @@ const handleEdit = (row) => {
   currentApplication.value = row
   form.company = row.company
   form.position = row.position
+
   form.event_link = row.event_link
-  form.location = row.location
-  form.salary = row.salary
-  form.contact_info = row.contact_info
-  form.notes = row.notes
+
+  form.notes = row.Notes
   dialogVisible.value = true
 }
 
@@ -345,21 +306,18 @@ const handleUpdateStatus = (row) => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     submitting.value = true
-    
+
     const submitData = {
       company: form.company,
       position: form.position,
       event_link: form.event_link,
-      location: form.location || '无',
-      salary: form.salary || '无',
-      contact_info: form.contact_info || '无',
       notes: form.notes || '无'
     }
-    
+
     if (isEdit.value) {
       await applicationApi.updateApplication(currentApplication.value.id, submitData)
       ElMessage.success('更新成功')
@@ -367,7 +325,7 @@ const handleSubmit = async () => {
       await applicationApi.createApplication(submitData)
       ElMessage.success('创建成功')
     }
-    
+
     dialogVisible.value = false
     fetchApplications()
   } catch (error) {
@@ -409,6 +367,18 @@ const handleSizeChange = (val) => {
   fetchApplications()
 }
 
+// 处理搜索
+const handleSearch = () => {
+  currentPage.value = 1 // 重置到第一页
+  fetchApplications()
+}
+
+// 处理状态筛选
+const handleStatusFilter = () => {
+  currentPage.value = 1 // 重置到第一页
+  fetchApplications()
+}
+
 onMounted(() => {
   fetchApplications()
 })
@@ -424,6 +394,16 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-input {
+  width: 200px;
 }
 
 .expanded-info {
@@ -463,4 +443,18 @@ onMounted(() => {
   display: flex;
   justify-content: center;
 }
-</style> 
+
+:deep(.el-checkbox-group) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:deep(.el-table-column__header) {
+  cursor: pointer;
+}
+
+:deep(.el-table-column__header .el-icon) {
+  margin-left: 4px;
+}
+</style>

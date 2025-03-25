@@ -18,14 +18,16 @@ func getEnv(key, defaultValue string) string {
 
 func main() {
 	// 从环境变量获取数据库配置
-	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "3306"))
+	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "8083"))
 	maxIdleConns, _ := strconv.Atoi(getEnv("DB_MAX_IDLE_CONNS", "10"))
 	maxOpenConns, _ := strconv.Atoi(getEnv("DB_MAX_OPEN_CONNS", "100"))
 
 	// 初始化MySQL连接
 	err := database.InitMySQL(&database.MySQLConfig{
-		Host:         getEnv("DB_HOST", "localhost"),
-		Port:         dbPort,
+		Host: "10.32.65.61",
+		Port: dbPort,
+		//Host:         getEnv("DB_HOST", "localhost"),
+		//Port:         dbPort,
 		Username:     getEnv("DB_USER", "resume_winter"),
 		Password:     getEnv("DB_PASSWORD", "resume_qwt123456"),
 		DBName:       getEnv("DB_NAME", "internship_manager"),

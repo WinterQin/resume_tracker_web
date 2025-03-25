@@ -7,35 +7,34 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_HOST=mysql-resume2
+      - DB_HOST=mysql-resume
       - DB_PORT=3306
-      - DB_USER=resume_user
-      - DB_PASSWORD=resume_user123456 
+      - DB_USER=resume_winter 
+      - DB_PASSWORD=resume_qwt123456 
       - JWT_KEY=winter-key 
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     networks:
       - mynet
 
   mysql:
     image: mysql:latest
-    container_name: mysql-resume2
+    container_name: mysql-resume
     restart: always
     ports:
-      - "8083:3306"
+      - "8081:3306"
     environment:
       MYSQL_ROOT_PASSWORD: qwt123456
       MYSQL_DATABASE: internship_manager
-      MYSQL_USER: resume_user
-      MYSQL_PASSWORD: resume_user123456 
+      MYSQL_USER: resume_winter
+      MYSQL_PASSWORD: resume_qwt123456
     volumes:
       - mysql-resume:/var/lib/mysql
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./scripts/mysql:/docker-entrypoint-initdb.d
     networks:
       - mynet
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "resume_user", "-presume_user123456 "]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "resume_winter", "-presume_qwt123456"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -44,10 +43,12 @@ services:
     image: nginx:alpine
     container_name: resume-nginx
     ports:
-      - "8084:80"
+      - "80:80"
     volumes:
-      - ./dist:/usr/share/nginx/html
+      - ./frontend/dist:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - resumego
     networks:
       - mynet
     restart: unless-stopped

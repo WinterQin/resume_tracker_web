@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
@@ -20,16 +18,17 @@ const (
 // Application 实习申请记录
 type Application struct {
 	gorm.Model
-	UserID      uint              `gorm:"not null" json:"user_id"`
-	Company     string            `gorm:"type:varchar(128);not null" json:"company"`
-	Position    string            `gorm:"type:varchar(128);not null" json:"position"`
-	Status      ApplicationStatus `gorm:"type:varchar(32);not null" json:"status"`
-	ApplyDate   time.Time         `json:"apply_date"`
-	NextEvent   *time.Time        `json:"next_event"` // 下一个面试/笔试时间
-	EventType   string            `json:"event_type"` // 事件类型（笔试/面试）
-	EventLink   string            `json:"event_link"` // 面试链接
-	Notes       string            `gorm:"type:text" json:"notes"`
-	Salary      string            `json:"salary"`       // 薪资
-	Location    string            `json:"location"`     // 工作地点
-	ContactInfo string            `json:"contact_info"` // 联系人信息
+	UserID    uint              `gorm:"not null" json:"user_id"`
+	Company   string            `gorm:"type:varchar(128);not null" json:"company"`
+	Position  string            `gorm:"type:varchar(128);not null" json:"position"`
+	Status    ApplicationStatus `gorm:"type:varchar(32);not null" json:"status"`
+	EventLink string            `json:"event_link"` // 链接
+	Notes     string            `gorm:"type:text" json:"notes"`
+
+	//NextEvent   *time.Time `json:"next_event"` // 下一个面试/笔试时间
+	//EventType   string     `json:"event_type"` // 事件类型（笔试/面试）
+	//ApplyDate   time.Time  `json:"apply_date"`
+	//Salary      string     `json:"salary"`       // 薪资
+	//Location    string     `json:"location"`     // 工作地点
+	//ContactInfo string     `json:"contact_info"` // 联系人信息
 }

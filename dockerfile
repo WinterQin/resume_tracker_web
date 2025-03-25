@@ -32,8 +32,8 @@ EXPOSE 8080
 # 设置默认环境变量
 ENV DB_HOST=localhost \
     DB_PORT=3306 \
-    DB_USER=resume_user \
-    DB_PASSWORD=resume_user123456 \
+    DB_USER=resume_winter \
+    DB_PASSWORD=resume_qwt123456 \
     DB_NAME=internship_manager \
     DB_CHARSET=utf8mb4 \
     DB_MAX_IDLE_CONNS=10 \

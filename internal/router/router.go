@@ -35,20 +35,42 @@ func SetupRouter() *gin.Engine {
 	authorized := r.Group("/api")
 	authorized.Use(middleware.JWTAuth())
 	{
+
+		// 申请相关路由
+		user := authorized.Group("/user")
+		{
+
+			//分页查找 带筛选和搜索
+			user.GET("/profile", userHandler.GetProfile)
+			//新增
+			//user.POST("", userHandler.CreateApplication)
+			//修改
+			user.PUT("/:id", userHandler.UpdateProfile) // 新的更新路由
+			//删除
+			user.DELETE("/:id", userHandler.DeleteAccount)
+
+		}
+
 		// 申请相关路由
 		applications := authorized.Group("/applications")
 		{
+
+			//分页查找 带筛选和搜索
 			applications.GET("", applicationHandler.GetApplications)
+			//新增
 			applications.POST("", applicationHandler.CreateApplication)
+			//修改
+			applications.PUT("/:id", applicationHandler.UpdateApplication) // 新的更新路由
+			//删除
+			applications.DELETE("/:id", applicationHandler.DeleteApplication)
 
-			applications.GET("/recent", applicationHandler.GetRecentApplications) // 获取最近5条申请
-			applications.DELETE("/:id", applicationHandler.DeleteApplication)     // 新增的删除路由
-			applications.PUT("/:id", applicationHandler.UpdateApplication)        // 新的更新路由
-			applications.PUT("/status", applicationHandler.UpdateStatus)
-			applications.PUT("/event", applicationHandler.UpdateEvent)
-
+			//统计信息
 			applications.GET("/statistics", applicationHandler.GetStatistics)
-			applications.GET("/upcoming-events", applicationHandler.GetUpcomingEvents)
+			//最近申请
+			applications.GET("/recent", applicationHandler.GetRecentApplications) // 获取最近5条申请
+			//更新状态
+			applications.PATCH("/status", applicationHandler.UpdateStatus)
+
 		}
 	}
 

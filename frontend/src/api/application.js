@@ -17,7 +17,7 @@ export const applicationApi = {
     return api.delete(`/applications/${id}`)
   },
   updateStatus(data) {
-    return api.put('/applications/status', data)
+    return api.patch('/applications/status', data)
   },
   updateEvent(data) {
     return api.put('/applications/event', data)
