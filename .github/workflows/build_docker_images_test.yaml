@@ -13,20 +13,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      - name: showname
+        run: echo ${{secrets.DOCKER_HUB_USERNAME }}
+        
       - name: Docker Login
-        # You may pin to the exact commit or the version.
-        # uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
         uses: docker/login-action@v3.4.0
         with:
-          # Username used to log against the Docker registry
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          # Password or personal access token used to log against the Docker registry
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-
           
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
